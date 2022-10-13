@@ -1,0 +1,35 @@
+version = 0.1
+##
+[development.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+confirm_changeset = false
+region = "us-east-1"
+s3_bucket = "sam-infra"
+s3_prefix = "INFRA-ECS-GIRASTARTER-DEV"
+stack_name = "INFRA-ECS-GIRASTARTER-web-development"
+template = "tasks-gira-starter.yaml"
+parameter_overrides = [
+  "Env=development",
+]
+[staging.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+confirm_changeset = false
+region = "us-east-1"
+s3_bucket = "sam-infra"
+s3_prefix = "INFRA-ECS-GIRASTARTER-DEV"
+stack_name = "INFRA-ECS-GIRASTARTER-web-staging"
+template = "tasks-gira-starter.yaml"
+parameter_overrides = [
+  "Env=staging",
+]
+[production.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+confirm_changeset = false
+region = "us-east-1"
+s3_bucket = "sam-infra"
+s3_prefix = "INFRA-ECS-GIRASTARTER-PRD"
+stack_name = "INFRA-ECS-GIRASTARTER-web-production"
+template = "tasks-gira-starter.yaml"
+parameter_overrides = [
+  "Env=production",
+]

@@ -1,0 +1,46 @@
+name: build / deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev, staging, main]
+jobs:
+  build-deploy:
+    runs-on: ubuntu-20.04
+    env:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWSDEPLOYKEY }}
+          aws-secret-access-key: ${{ secrets.AWSDEPLOYSECRET }}
+          aws-region: ${{ secrets.AWSDEPLOYREGION }}
+
+      - name: Config-NPMRC
+        run: |
+          cp .npmrc_actions ~/.npmrc
+        working-directory: devops
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch        
+
+      - name: Build
+        env:
+          GIT_BRANCH_DEPLOY: ${{steps.extract_branch.outputs.branch}}
+        run: |
+          echo "BRANCH: ${GIT_BRANCH_DEPLOY}"
+          if [ "${GIT_BRANCH_DEPLOY}" = "main" ]; then
+            export BUILD_ENV=production
+          elif [ "${GIT_BRANCH_DEPLOY}" = "staging" ]; then
+            export BUILD_ENV=staging
+          else
+            export BUILD_ENV=development
+          fi
+          echo "Release - ${BUILD_ENV}"
+          make build env=${BUILD_ENV} NPM_AUTH_TOKEN=${NPM_AUTH_TOKEN}
+          make restart env=${BUILD_ENV}
+        working-directory: devops

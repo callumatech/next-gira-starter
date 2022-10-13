@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Stack for Tasks ECS creation (Gira-Starter)
+
+Parameters:
+  Env:
+    Type: String
+    Default: development
+    AllowedValues:
+      - staging
+      - production
+      - development
+Mappings:
+  Environments:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location: ./dependencies.yaml
+
+Resources:
+  GiraStarterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - rl-ecs-web-gira-starter-${prefix}
+        - prefix: !FindInMap [Environments, Prefix, !Ref Env]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+                - events.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: policy-ecs-web-gira-starter
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - ecr:*
+                Resource: '*'
+
+  GiraStarterTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: [GiraStarterRole]
+    Properties:
+      ContainerDefinitions:
+        - Name: GiraStarterContainer
+          Image: !Sub
+            - 887937850409.dkr.ecr.us-east-1.amazonaws.com/web-gira-starter:${prefix}
+            - prefix: !Ref Env
+          PortMappings:
+            - ContainerPort: 3000
+              HostPort: 3000
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !FindInMap [Environments, LogGroup, !Ref Env]
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: !Sub
+                - ${prefix}-web-gira-starter
+                - prefix: !FindInMap [Environments, Prefix, !Ref Env]
+          Command:
+            - /bin/sh
+            - -c
+            - yarn start
+      Cpu: 256
+      Family: !FindInMap [Environments, Family, !Ref Env]
+      Memory: 1024
+      NetworkMode: awsvpc # only network mode supported by fargate
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref GiraStarterRole
+      TaskRoleArn: !Ref GiraStarterRole
+
+  GiraStarterService:
+    Type: AWS::ECS::Service
+    DependsOn: [GiraStarterTaskDefinition]
+    Properties:
+      ServiceName: !FindInMap [Environments, ServiceName, !Ref Env]
+      Cluster: !FindInMap [Environments, ClusterName, !Ref Env]
+      TaskDefinition: !Ref GiraStarterTaskDefinition
+      DesiredCount: 0
+      PlatformVersion: 1.4.0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: !FindInMap [Environments, SecurityGroupIds, !Ref Env]
+          Subnets: !FindInMap [Environments, SubnetIds, !Ref Env]
+      LoadBalancers:
+        - TargetGroupArn: !FindInMap [Environments, LoadBalance, !Ref Env]
+          ContainerName: GiraStarterContainer
+          ContainerPort: 3000
+
