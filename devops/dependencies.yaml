@@ -1,0 +1,51 @@
+Prefix:
+  development: DEV
+  staging: STG
+  production: PRD
+
+SecurityGroupIds:
+  development:
+    - sg-0d9ebf9d1fea907ec
+  staging:
+    - sg-0d9ebf9d1fea907ec
+  production:
+    - sg-060cbf6a39444e5b9
+
+SubnetIds:
+  development:
+    - subnet-0dae86a58adbc6a1b
+    - subnet-0eadba52c34a19bc9
+    - subnet-0fe63004a2afe807f
+  staging:
+    - subnet-0dae86a58adbc6a1b
+    - subnet-0eadba52c34a19bc9
+    - subnet-0fe63004a2afe807f
+  production:
+    - subnet-0f8e523061fa17eeb
+    - subnet-07b84d1b7d342ed56
+    - subnet-005a9764dd23c3621
+
+LoadBalance:
+  development: arn:aws:elasticloadbalancing:us-east-1:887937850409:targetgroup/web-gira-starter-development/40446aa69147d247
+  staging: arn:aws:elasticloadbalancing:us-east-1:887937850409:targetgroup/web-gira-starter-staging/66ca5da93c37bd40
+  production: arn:aws:elasticloadbalancing:us-east-1:887937850409:targetgroup/web-gira-starter-production/b1ffe95fd50b35d3
+
+LogGroup:
+  development: ClusterInfraFargateDevelopment
+  staging: ClusterInfraFargateDevelopment
+  production: ClusterInfraFargate
+
+Family:
+  development: WebGiraStarterDevelopmentFamily
+  staging: WebGiraStarterStagingFamily
+  production: WebGiraStarterFamily
+
+ServiceName:
+  development: web-gira-starter-development
+  staging: web-gira-starter-staging
+  production: web-gira-starter
+
+ClusterName:
+  development: Infrastructure-Fargate-Development
+  staging: Infrastructure-Fargate-Development
+  production: Infrastructure-Fargate
